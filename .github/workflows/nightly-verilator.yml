@@ -9,8 +9,8 @@ on:
 jobs:
   smoke_test:
     name: Smoke Test
-    runs-on: ubuntu-22.04
-    timeout-minutes: 360
+    runs-on: e2-standard-2
+    timeout-minutes: 600
 
     env:
       VERILATOR_VERSION: v5.006
