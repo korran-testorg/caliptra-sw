@@ -14,6 +14,8 @@ function cleanup1 {
 }
 #trap cleanup1 EXIT
 
+losetup -c ${LOOPBACK_DEV}
+
 sudo mkdir -p mnt/p2
 mount ${LOOPBACK_DEV}p2 mnt/p2
 function cleanup2 {
@@ -23,6 +25,7 @@ function cleanup2 {
 }
 #trap cleanup2 EXIT
 
-chroot mnt/p2 apt-get update
-chroot mnt/p2 apt-get upgrade
-chroot mnt/p2 apt-get install libftdi-dev
+chroot mnt/p2 apt-get update 
+chroot mnt/p2 apt-get upgrade -y
+chroot mnt/p2 apt-get install -y libftdi1-dev symlinks
+chroot mnt/p2 bash -c 'cd /usr/lib/aarch64-linux-gnu && symlinks -c -r .'

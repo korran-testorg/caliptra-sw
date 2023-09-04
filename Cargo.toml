@@ -11,6 +11,7 @@ exclude = [
   # Uses a custom .cargo/config
   "sw-emulator/example",
   "dpe/*",
+  "ci-tools/fpga-boss",
 ]
 
 members = [
