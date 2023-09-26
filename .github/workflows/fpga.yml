@@ -140,7 +140,7 @@ jobs:
           mkdir /tmp/caliptra-test-firmware
           cargo run --release -p caliptra-builder -- --all_elfs /tmp/caliptra-test-firmware
 
-      - name: 'Upload test binaries artifact'
+      - name: 'Upload test firmware artifact'
         uses: actions/upload-artifact@v3
         with:
           name: caliptra-test-firmware
@@ -204,7 +204,7 @@ jobs:
 
   test_artifacts:
     runs-on: caliptra-fpga
-    needs: [check_cache, build_bitstream]
+    needs: [check_cache, build_bitstream, build_test_binaries]
     if: always() && contains(needs.*.result, 'success') && !contains(needs.*.result, 'failure')
     steps:
       - name: 'Download FPGA Bitstream Artifact'
