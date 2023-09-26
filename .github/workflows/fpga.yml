@@ -122,12 +122,30 @@ jobs:
           cargo \
             --config "target.aarch64-unknown-linux-gnu.rustflags = [\"-C\", \"link-arg=--sysroot=/tmp/caliptra-fpga-sysroot\"]" \
             --config "target.aarch64-unknown-linux-gnu.linker = \"aarch64-linux-gnu-gcc\"" \
-            test --release --no-run --target=aarch64-unknown-linux-gnu
+            test --release --no-run --target=aarch64-unknown-linux-gnu | tee /tmp/cargo-output
+          mkdir /tmp/caliptra-test-binaries
+          cat /tmp/cargo-output | grep -E '^  Executable.*?\(.*?\)' | sed -E 's/^  Executable.*?\((.*?)\)/\1/' | while read line; do
+            cp "$line" /tmp/calptra-test-binaries/
+          done
+
+      - name: 'Upload test binaries artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: caliptra-test-binaries
+          path: /tmp/caliptra-test-binaries
+          retention-days: 1
 
       - name: Build test firmware
         run: |
           mkdir /tmp/caliptra-test-firmware
           cargo run --release -p caliptra-builder -- --all_elfs /tmp/caliptra-test-firmware
+
+      - name: 'Upload test binaries artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: caliptra-test-firmware
+          path: /tmp/caliptra-test-firmware
+          retention-days: 1
 
   build_bitstream:
     runs-on: [e2-standard-8, fpga-tools]
@@ -192,16 +210,22 @@ jobs:
       - name: 'Download FPGA Bitstream Artifact'
         uses: actions/download-artifact@v3
         with:
-          name: caliptra-fpga
+          name: caliptra-fpga-bitstream
           path: /tmp/caliptra-fpga
 
-      - name: 'Download FPGA Sysroot Artifact'
+      - name: 'Download Test Binaries Artifact'
         uses: actions/download-artifact@v3
         with:
-          name: caliptra-fpga-sysroot
-          path: /tmp/
+          name: caliptra-test-binaries
+          path: /tmp/caliptra-test-binaries
 
-      - name: Display FPGA bitstream
+      - name: 'Download Test Firmware Artifact'
+        uses: actions/download-artifact@v3
+        with:
+          name: caliptra-test-firmware
+          path: /tmp/caliptra-test-firmware
+
+      - name: Show everything
         run: |
           # sha256sum /tmp/caliptra-fpga/caliptra_fpga.bin
           find /tmp/
