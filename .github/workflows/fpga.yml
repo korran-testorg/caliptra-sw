@@ -124,6 +124,8 @@ jobs:
             --config "target.aarch64-unknown-linux-gnu.linker = \"aarch64-linux-gnu-gcc\"" \
             test --release --no-run --target=aarch64-unknown-linux-gnu | tee /tmp/cargo-output
           mkdir /tmp/caliptra-test-binaries
+          echo cargo-output is
+          cat /tmp/cargo-output
           cat /tmp/cargo-output | grep -E '^  Executable.*?\(.*?\)' | sed -E 's/^  Executable.*?\((.*?)\)/\1/' | while read line; do
             cp "$line" /tmp/calptra-test-binaries/
           done
