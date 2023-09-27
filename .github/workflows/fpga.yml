@@ -228,4 +228,4 @@ jobs:
       - name: Show everything
         run: |
           # sha256sum /tmp/caliptra-fpga/caliptra_fpga.bin
-          find /tmp/
+          find /tmp/ -exec ls -lh "{}" \;
