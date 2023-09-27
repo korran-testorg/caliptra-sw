@@ -225,7 +225,7 @@ jobs:
           name: caliptra-test-firmware
           path: /tmp/caliptra-test-firmware
 
-      - name: Show everything
+      - name: Show filesystem contents
         run: |
           # sha256sum /tmp/caliptra-fpga/caliptra_fpga.bin
           find /tmp/ -exec ls -lh "{}" \;
