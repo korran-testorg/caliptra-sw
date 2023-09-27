@@ -122,10 +122,11 @@ jobs:
           cargo \
             --config "target.aarch64-unknown-linux-gnu.rustflags = [\"-C\", \"link-arg=--sysroot=/tmp/caliptra-fpga-sysroot\"]" \
             --config "target.aarch64-unknown-linux-gnu.linker = \"aarch64-linux-gnu-gcc\"" \
-            test --release --no-run --target=aarch64-unknown-linux-gnu --message-format=json | tee /tmp/caliptra-cargo.json
+            test --release --no-run --target=aarch64-unknown-linux-gnu --message-format=json > /tmp/caliptra-cargo.json
           cat /tmp/caliptra-cargo.json | jq -r '.executable | select(. != null)' | while read line; do
-            cp "$line" /tmp/calptra-test-binaries/
+            cp "$line" /tmp/caliptra-test-binaries/
           done
+          cp /tmp/caliptra-cargo.json /tmp/caliptra-test-binaries/
 
       - name: 'Upload test binaries artifact'
         uses: actions/upload-artifact@v3
@@ -227,4 +228,4 @@ jobs:
       - name: Show everything
         run: |
           # sha256sum /tmp/caliptra-fpga/caliptra_fpga.bin
-          find /tmp/
+          find /tmp/ -exec ls -lh "{}" \;
