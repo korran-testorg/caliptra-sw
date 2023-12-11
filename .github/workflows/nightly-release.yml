@@ -67,7 +67,7 @@ jobs:
     uses: ./.github/workflows/fpga.yml
     with:
       artifact-suffix: -fpga-realtime-etrng-log
-      extra-features: slow_tests
+#      extra-features: slow_tests
       rom-logging: true
 
   fpga-full-suite-etrng-nolog:
@@ -77,7 +77,7 @@ jobs:
     uses: ./.github/workflows/fpga.yml
     with:
       artifact-suffix: -fpga-realtime-etrng-nolog
-      extra-features: slow_tests
+#      extra-features: slow_tests
       rom-logging: false
 
   sw-emulator-full-suite-etrng-log:
@@ -87,7 +87,7 @@ jobs:
     uses: ./.github/workflows/fw-test-emu.yml
     with:
       artifact-suffix: -sw-emulator-realtime-etrng-log
-      extra-features: slow_tests
+#      extra-features: slow_tests
       rom-logging: true
 
   sw-emulator-full-suite-etrng-nolog:
@@ -97,7 +97,7 @@ jobs:
     uses: ./.github/workflows/fw-test-emu.yml
     with:
       artifact-suffix: -sw-emulator-realtime-etrng-nolog
-      extra-features: slow_tests
+#      extra-features: slow_tests
       rom-logging: false
 
   sw-emulator-full-suite-itrng-log:
@@ -107,7 +107,7 @@ jobs:
     uses: ./.github/workflows/fw-test-emu.yml
     with:
       artifact-suffix: -sw-emulator-realtime-itrng-log
-      extra-features: slow_tests,itrng
+      extra-features: itrng
       rom-logging: true
 
   sw-emulator-full-suite-itrng-nolog:
@@ -117,7 +117,7 @@ jobs:
     uses: ./.github/workflows/fw-test-emu.yml
     with:
       artifact-suffix: -sw-emulator-realtime-itrng-nolog
-      extra-features: slow_tests,itrng
+      extra-features: itrng
       rom-logging: false
 
   create-release:
