@@ -22,12 +22,12 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          submodules: 'true'
           ref: 'main'
 
       - name: Update the Caliptra RTL submodule and rebuild registers
         run: |
           echo "RTL-REPO-SYNC: release_ref=$(git rev-parse HEAD)"
+          git submodule update --init
           git --version
           echo Running status
           git status
