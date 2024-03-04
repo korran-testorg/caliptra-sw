@@ -9,9 +9,6 @@ file mkdir $outputDir
 file mkdir $packageDir
 file mkdir $adapterDir
 
-# Path to rtl
-set rtlDir $fpgaDir/../1.0/rtl
-
 # Simplistic processing of command line arguments to enable different features
 # Defaults:
 set BUILD FALSE
@@ -19,6 +16,7 @@ set GUI   FALSE
 set JTAG  TRUE
 set ITRNG TRUE
 set CG_EN FALSE
+set HW_LATEST TRUE
 foreach arg $argv {
     regexp {(.*)=(.*)} $arg fullmatch option value
     set $option "$value"
@@ -27,6 +25,13 @@ foreach arg $argv {
 # This assumes it is run from within caliptra-sw. If building from outside caliptra-sw call with "VERSION=[hex number]"
 if {[info exists VERSION] == 0} {
   set VERSION [exec git rev-parse --short HEAD]
+}
+
+# Path to rtl
+if {$HW_LATEST} {
+  set rtlDir $fpgaDir/../latest/rtl
+} else {
+  set rtlDir $fpgaDir/../1.0/rtl
 }
 
 # Set Verilog defines for:

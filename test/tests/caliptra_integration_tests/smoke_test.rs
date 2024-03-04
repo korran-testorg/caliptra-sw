@@ -714,7 +714,11 @@ fn test_rt_wdt_timeout() {
 fn test_fmc_wdt_timeout() {
     // TODO: Don't hard-code these; maybe measure from a previous boot?
     let fmc_wdt_timeout_cycles = if cfg!(any(feature = "verilator", feature = "fpga_realtime")) {
-        25_300_000
+        if cfg!(feature = "hw-latest") {
+            23_000_000
+        } else {
+            25_300_000
+        }
     } else {
         3_020_000
     };
