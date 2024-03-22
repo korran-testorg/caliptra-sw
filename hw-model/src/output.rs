@@ -106,6 +106,12 @@ impl OutputSink {
             }
             0x20..=0x7f | b'\r' | b'\n' | b'\t' => {
                 let mut s = self.0.new_uart_output.take();
+                if self.0.at_start_of_line.get() {
+                    s = s
+                        + &self.0.now.get().to_string()
+                        + " "
+                        + std::str::from_utf8(UART_LOG_PREFIX).unwrap();
+                }
                 s.push(ch as char);
                 self.0.new_uart_output.set(s);
 
@@ -134,17 +140,22 @@ impl OutputSink {
 impl std::io::Write for &OutputSink {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let log_writer = &mut self.0.log_writer.borrow_mut();
+        let mut s = self.0.new_uart_output.take();
         // Write a time prefix in front of every line
         for line in buf.split_inclusive(|ch| *ch == b'\n') {
             if self.0.next_write_needs_time_prefix.get() {
                 write!(log_writer, "{} ", PrettyU64(self.0.now.get())).unwrap();
+                s = s + &self.0.now.get().to_string() + " ";
                 self.0.next_write_needs_time_prefix.set(false);
             }
+            s = s + std::str::from_utf8(line).unwrap();
             log_writer.write_all(line)?;
             if line.ends_with(b"\n") {
                 self.0.next_write_needs_time_prefix.set(true);
             }
         }
+
+        self.0.new_uart_output.set(s);
         Ok(buf.len())
     }
 

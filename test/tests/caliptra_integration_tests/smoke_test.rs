@@ -1,5 +1,6 @@
 // Licensed under the Apache-2.0 license
 
+use caliptra_builder::firmware::{APP_WITH_UART, FMC_WITH_UART, ROM_WITH_UART};
 use caliptra_builder::{firmware, ImageOptions};
 use caliptra_common::mailbox_api::{
     GetFmcAliasCertReq, GetLdevCertReq, GetRtAliasCertReq, ResponseVarSize,
@@ -712,16 +713,76 @@ fn test_rt_wdt_timeout() {
 
 #[test]
 fn test_fmc_wdt_timeout() {
-    // TODO: Don't hard-code these; maybe measure from a previous boot?
-    let fmc_wdt_timeout_cycles = if cfg!(any(feature = "verilator", feature = "fpga_realtime")) {
-        25_300_000
-    } else {
-        3_020_000
-    };
-
     let rom = caliptra_builder::build_firmware_rom(firmware::rom_from_env()).unwrap();
 
     let security_state = *caliptra_hw_model::SecurityState::default().set_debug_locked(true);
+    let init_params = caliptra_hw_model::InitParams {
+        rom: &rom,
+        security_state,
+        itrng_nibbles: Box::new(RandomNibbles(StdRng::seed_from_u64(0))),
+        etrng_responses: Box::new(RandomEtrngResponses(StdRng::seed_from_u64(0))),
+        ..Default::default()
+    };
+
+    let image = caliptra_builder::build_and_sign_image(
+        &FMC_WITH_UART,
+        &APP_WITH_UART,
+        ImageOptions::default(),
+    )
+    .unwrap();
+
+    // Boot to capture FMC timestamps
+    let mut hw = caliptra_hw_model::new(BootParams {
+        init_params,
+        fw_image: Some(&image.to_bytes().unwrap()),
+        ..Default::default()
+    })
+    .unwrap();
+    hw.step_until_output_contains("[rt] Runtime listening for mailbox commands...\n")
+        .unwrap();
+    let output = hw.output().take(usize::MAX);
+
+    let re = regex::Regex::new(r"\n(\d*) UART: Running Caliptra FMC").unwrap();
+    let fmc_start = re.captures(&output).unwrap()[1].parse::<u64>().unwrap();
+    println!("fmc_start {fmc_start:?}");
+
+    let re =
+        regex::Regex::new(r"\n(\d*) UART: \[rt] Runtime listening for mailbox commands").unwrap();
+    let rt_start = re.captures(&output).unwrap()[1].parse::<u64>().unwrap();
+    println!("rt_start {rt_start:?}");
+
+    drop(hw);
+
+    let re = regex::Regex::new(r"\n(\d*) UART: \[state] Starting the Watchdog Timer").unwrap();
+    let wdt_start = match re.captures(&output) {
+        Some(capture) => capture[1].parse::<u64>().unwrap(),
+        None => {
+            // Boot again with a ROM with UART enabled to capture the start of the WDT.
+            let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_UART).unwrap();
+            let init_params = caliptra_hw_model::InitParams {
+                rom: &rom,
+                security_state,
+                itrng_nibbles: Box::new(RandomNibbles(StdRng::seed_from_u64(0))),
+                etrng_responses: Box::new(RandomEtrngResponses(StdRng::seed_from_u64(0))),
+                ..Default::default()
+            };
+            let mut hw = caliptra_hw_model::new(BootParams {
+                init_params,
+                ..Default::default()
+            })
+            .unwrap();
+            hw.step_until_output_contains("Starting the Watchdog Timer")
+                .unwrap();
+            let output = hw.output().take(usize::MAX);
+            drop(hw);
+
+            re.captures(&output).unwrap()[1].parse::<u64>().unwrap()
+        }
+    };
+
+    // Calculate the timeout value to land in the middle of the FMC execution
+    let fmc_wdt_timeout_cycles = ((fmc_start + rt_start) / 2) - wdt_start;
+
     let init_params = caliptra_hw_model::InitParams {
         rom: &rom,
         security_state,
