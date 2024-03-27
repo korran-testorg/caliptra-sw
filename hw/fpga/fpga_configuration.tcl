@@ -16,6 +16,7 @@ set GUI   FALSE
 set JTAG  TRUE
 set ITRNG TRUE
 set CG_EN FALSE
+set RTL_VERSION latest
 foreach arg $argv {
     regexp {(.*)=(.*)} $arg fullmatch option value
     set $option "$value"
@@ -27,11 +28,12 @@ if {[info exists VERSION] == 0} {
 }
 
 # Path to rtl
-if {$RTL_VERSION} {
-  set rtlDir $RTL_DIR/../$RTL_VERSION/rtl
-} else {
-  set rtlDir $fpgaDir/../latest/rtl
-}
+set rtlDir $fpgaDir/../$RTL_VERSION/rtl
+puts "JTAG: $JTAG"
+puts "ITRNG: $ITRNG"
+puts "CG_EN: $CG_EN"
+puts "RTL_VERSION: $RTL_VERSION"
+puts "Using RTL directory $rtlDir"
 
 # Set Verilog defines for:
 #     Caliptra clock gating module
